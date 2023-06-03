@@ -8,6 +8,9 @@ import com.example.sample.persist.entity.CompanyEntity;
 import com.example.sample.persist.entity.DividendEntity;
 import com.example.sample.scraper.Scraper;
 import lombok.AllArgsConstructor;
+import org.apache.commons.collections4.Trie;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -17,6 +20,8 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class CompanyService {
+
+    private final Trie trie;
     private final Scraper yahooFinanceScraper;
 
     private final CompanyRepository companyRepository;
@@ -30,6 +35,9 @@ public class CompanyService {
         return this.storeCompanyAndDividend(ticker);
     }
 
+    public Page<CompanyEntity> getAllCompany(Pageable pageable) {
+        return this.companyRepository.findAll(pageable);
+    }
     private Company storeCompanyAndDividend(String ticker) {
         // ticker 를 기준으로 회사를 스크래핑
         Company company = this.yahooFinanceScraper.scrapCompanyByTicker(ticker);
@@ -49,5 +57,18 @@ public class CompanyService {
 
         this.dividendRepository.saveAll(dividendEntities);
         return company;
+    }
+
+    public void addAutocompleteKeyword(String keyword) {
+        this.trie.put(keyword, null);
+    }
+
+    public List<String> autocomplete(String keyword) {
+        return (List<String>) this.trie.prefixMap(keyword).keySet()
+                .stream().collect(Collectors.toList());
+    }
+
+    public void deleteAutocompleteKeyword(String keyword) {
+        this.trie.remove(keyword);
     }
 }
