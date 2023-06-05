@@ -2,6 +2,8 @@ package com.example.sample.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -27,10 +29,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = this.resolveTokenFromRequest(request);
 
-        if (StringUtils.hasText(token) && this.tokenProvider.validateToken(token) {
-            // 토큰 유효성 검증
+        if (StringUtils.hasText(token) && this.tokenProvider.validateToken(token)) {
+            Authentication auth = this.tokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
+            log.info(String.format("[%s] -> %s", this.tokenProvider.getUsername(token), request.getRequestURI()));
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private String resolveTokenFromRequest(HttpServletRequest request) {

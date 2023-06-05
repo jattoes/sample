@@ -8,7 +8,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -50,9 +52,8 @@ public class TokenProvider {
     }
 
     public Authentication getAuthentication(String jwt) {
-        UserDetails userDetails = this.memberService.loadUserByUsername(this.getUsername(jwt));
-
-        return null;
+         UserDetails userDetails = this.memberService.loadUserByUsername(this.getUsername(jwt));
+         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
     public String getUsername(String token) {
